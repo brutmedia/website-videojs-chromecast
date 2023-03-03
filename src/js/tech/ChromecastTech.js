@@ -75,6 +75,7 @@ module.exports = function(videojs) {
          this._requestTitle = options.requestTitleFn || function() { /* noop */ };
          this._requestSubtitle = options.requestSubtitleFn || function() { /* noop */ };
          this._requestCustomData = options.requestCustomDataFn || function() { /* noop */ };
+         this._modifyLoadRequestFn = options.modifyLoadRequestFn || function() { /* noop */ };
          // See `currentTime` function
          this._initialStartTime = options.startTime || 0;
 
@@ -186,6 +187,9 @@ module.exports = function(videojs) {
              request;
 
          this.trigger('waiting');
+         console.log('====================================');
+         console.log('cast', {source, startTime});
+         console.log('====================================');
          this._clearSessionTimeout();
 
          mediaInfo.metadata = new chrome.cast.media.GenericMediaMetadata();
@@ -209,6 +213,11 @@ module.exports = function(videojs) {
          request = new chrome.cast.media.LoadRequest(mediaInfo);
          request.autoplay = true;
          request.currentTime = startTime;
+         request = this._modifyLoadRequestFn(request);
+
+         console.log('====================================');
+         console.log('request', {request});
+         console.log('====================================');
 
          this._isMediaLoading = true;
          this._hasPlayedCurrentItem = false;
@@ -243,6 +252,8 @@ module.exports = function(videojs) {
          if (time > duration || !this._remotePlayer.canSeek) {
             return;
          }
+         console.log('cast', {time});
+
          // Seeking to any place within (approximately) 1 second of the end of the item
          // causes the Video.js player to get stuck in a BUFFERING state. To work around
          // this, we only allow seeking to within 1 second of the end of an item.
